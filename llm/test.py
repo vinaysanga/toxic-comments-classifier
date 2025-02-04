@@ -1,3 +1,12 @@
+"""
+This script evaluates a model evaluation that was trained using the trainer.py or the GPU Run.ipynb.
+
+Main components:
+- CustomTrainer: A custom implementation of HuggingFace's Trainer
+- Metric computation functions for multi-label classification
+- Model evaluation setup with BERT-based architecture
+"""
+
 from torch import nn
 from datasets import load_from_disk
 from sklearn.metrics import f1_score, roc_auc_score, accuracy_score, precision_score, recall_score
@@ -24,6 +33,27 @@ tokenizer = AutoTokenizer.from_pretrained(CONFIG['checkpoint'])
 tokenized_datasets = load_from_disk(CONFIG['data'])
 
 def multi_label_metrics(predictions, labels, threshold=0.5):
+    """
+    Calculate various metrics for multi-label classification evaluation.
+    
+    Args:
+        predictions (numpy.ndarray or torch.Tensor): Model predictions (logits)
+        labels (numpy.ndarray or torch.Tensor): Ground truth labels
+        threshold (float, optional): Decision threshold for converting probabilities to binary predictions. 
+                                   Defaults to 0.5.
+    
+    Returns:
+        dict: Dictionary containing various metrics including:
+            - roc_auc: Area under ROC curve (micro-averaged)
+            - f1_micro: Micro-averaged F1 score
+            - f1_macro: Macro-averaged F1 score
+            - precision_micro: Micro-averaged precision
+            - precision_macro: Macro-averaged precision
+            - recall_micro: Micro-averaged recall
+            - recall_macro: Macro-averaged recall
+            - accuracy: Overall accuracy
+            - f1_label_X: F1 score for each individual label
+    """
     # Ensure predictions and labels are NumPy arrays
     if isinstance(predictions, torch.Tensor):
         predictions = predictions.detach().cpu().numpy()
@@ -90,7 +120,28 @@ def compute_metrics_v2(p: EvalPrediction, threshold=0.5):
     )
 
 class CustomTrainer(Trainer):
+    """
+    Custom implementation of HuggingFace's Trainer class for multi-label classification.
+    
+    This trainer implements a custom loss computation using Binary Cross Entropy with Logits Loss,
+    which is suitable for multi-label classification tasks.
+    """
+    
     def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
+        """
+        Compute the training loss for multi-label classification.
+        
+        Args:
+            model: The model to compute loss for
+            inputs (dict): The input dictionary containing model inputs and labels
+            return_outputs (bool, optional): Whether to return model outputs along with the loss.
+                                          Defaults to False.
+            **kwargs: Additional keyword arguments
+            
+        Returns:
+            torch.Tensor or tuple: If return_outputs is False, returns only the loss.
+                                 If True, returns a tuple of (loss, outputs).
+        """
         labels = inputs.get("labels")
 
         # Forward pass

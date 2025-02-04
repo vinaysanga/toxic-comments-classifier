@@ -2,4 +2,7 @@ ml-proj/
 llm/.venv
 llm/mlruns/
 
+# Large model checkpoints
+llm/checkpoints/
+
 **/.DS_Store
