@@ -1,3 +1,5 @@
 ml-proj/
 llm/.venv
 llm/mlruns/
+
+**/.DS_Store
