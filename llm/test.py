@@ -10,10 +10,9 @@ import numpy as np
 CONFIG = {
     'checkpoint': 'v2-bert-31/checkpoint-1350',
     'labels': ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate'],
-    'data': "datasets-bert-31",
-    'run-name': "bert-31"
+    'test-data': "../data/test_data.csv",
+    'run-name': "test-trainer-bert-31"
 }
-
 
 # Labels
 labels = CONFIG['labels']
@@ -21,8 +20,7 @@ id2label = {i: label for i, label in enumerate(labels)}
 label2id = {label: i for i, label in enumerate(labels)}
 
 # Load dataset and tokenizer
-checkpoint = CONFIG['checkpoint']
-tokenizer = AutoTokenizer.from_pretrained(checkpoint)
+tokenizer = AutoTokenizer.from_pretrained(CONFIG['checkpoint'])
 tokenized_datasets = load_from_disk(CONFIG['data'])
 
 def multi_label_metrics(predictions, labels, threshold=0.5):
@@ -109,7 +107,7 @@ class CustomTrainer(Trainer):
 
 # Load model
 model = AutoModelForSequenceClassification.from_pretrained(
-    "bert-base-uncased",
+    CONFIG['checkpoint'],
     num_labels=len(labels),
     id2label=id2label,
     label2id=label2id,
@@ -121,24 +119,7 @@ data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
 # Training arguments
 training_args = TrainingArguments(
-    output_dir="v2-distilbert-31-5ep",
-    logging_strategy="steps",
-    logging_steps=200,
-    logging_first_step=True,
-    eval_strategy="steps",
-    eval_steps=200,
-    save_strategy="steps",
-    save_steps=200,
-    learning_rate=2e-5,
-    num_train_epochs=5,
-    weight_decay=0.01,
-    per_device_train_batch_size=16,  # Adjust based on memory usage
-    per_device_eval_batch_size=16,
-    gradient_accumulation_steps=3,  # Simulate effective batch size of 48
-    fp16=False,  # Mixed precision
-    save_total_limit=2,
-    load_best_model_at_end=True,
-    metric_for_best_model="eval_f1_micro",
+    CONFIG["run-name"],
     report_to="mlflow",
 )
 
@@ -154,4 +135,4 @@ trainer = CustomTrainer(
 )
 
 # Train the model
-trainer.train()
+trainer.evaluate()

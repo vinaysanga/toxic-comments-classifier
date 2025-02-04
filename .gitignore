@@ -1,1 +1,3 @@
-**/ml-proj/
+ml-proj/
+llm/.venv
+llm/mlruns/
